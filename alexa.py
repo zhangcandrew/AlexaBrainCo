@@ -50,7 +50,7 @@ def get_welcome_response():
 
     session_attributes = {}
     card_title = "Welcome"
-    speech_output = "Welcome to BrainCo. " \
+    speech_output = "Welcome to Mindful. " \
                     "What do you want to be quizzed on today?"
 
     # If the user either does not reply to the welcome message or says something
@@ -64,7 +64,7 @@ def get_welcome_response():
 
 def handle_session_end_request():
     card_title = "Session Ended"
-    speech_output = "Thanks for using BrainCo!"
+    speech_output = "Thanks for using Mindful!"
 
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
@@ -90,11 +90,11 @@ def set_color_in_session(intent, session):
         unit = intent['slots']['interval']['value']
         session_attributes[topic] = int(favorite_color)
         
-        if unit == "seconds":
+        if unit == "seconds" or unit == "second":
             time.sleep(float(favorite_color))
             speech_output = favorite_color + " seconds are up! Explain "+ topic+" to me!"
             reprompt_text = "Staying silent won't help your case."
-            session_attributes['secondTest'] = True
+            session_attributes['secondTest'] = topic
         else:
             speech_output = "ok. I will quiz you on " + topic + " in " + favorite_color + " " + unit
             reprompt_text = "Your quiz was created. Do you want to create another? " 
@@ -120,11 +120,15 @@ def get_color_from_session(intent, session):
     reprompt_text = None
     should_end_session = False
     speech_output = "That doesn't make sense. Try again"
-    l = [ ("What is the powerhouse of the cell?", "Mitochondria"),
-("What is orderly display showing the number and types of chromosomes in diploid cell and arranged in homologous pairs?", "karyotype"),
-("What is the term for different versions of the same kind of gene on pair of homologous chromosomes?", "alleles"),
+    l = [
 ("What is the term for the state of geopolitical tension after World War II between powers in the Eastern Bloc and powers in the Western Bloc?", "The Cold War"),
-("Who was the twenty-sixth president of the United States?", "Theodore Roosevelt")
+("Who was the twenty-sixth president of the United States?", "Theodore Roosevelt"),
+("From what protein is gelatin, which is used as a food additive, most commonly derived?", "collagen"),
+("From what monosaccharide is cellulose primarily composed of?", "glucose"),
+("What is the force, in newtons, of an object with mass of 10 kilograms moving with an acceleration of ten meters per second squared", "100"),
+("What is the primary elemental product of stellar hydrogen fusion?", "helium"),
+("The sinoatrial node is located in what human organ?", "the Heart"),
+("Who was the president of the United States during the Great Depression?", "Herbert Hoover")
 ]
     
     if intent['name'] == "RandomQuestionIntent":
@@ -137,13 +141,14 @@ def get_color_from_session(intent, session):
     elif intent['name'] == "AnswerIntent":
         if 'Answer' in intent['slots'] and 'value' in intent['slots']['Answer']:
             if 'attributes' in session and 'answer' in session['attributes'] and intent['slots']['Answer']['value'].strip().lower() == session['attributes']['answer'].lower():
-                speech_output = "That's a fantastic answer! Looks like its works!"
+                speech_output = "That's a fantastic answer! Looks like it works!"
                 session_attributes = session.get('attributes', {})
                 del session_attributes['answer']
                 should_end_session = False
             elif 'attributes' in session and 'secondTest' in session['attributes'] and session['attributes']['secondTest']:
-                speech_output = "Fantastic explanation! That was a good one"
+                speech_output = "Fantastic explanation! Keep using it!"
                 session_attributes = session.get('attributes', {})
+                del session_attributes[session_attributes['secondTest']]
                 del session_attributes['secondTest']
                 should_end_session = False
             else:
@@ -158,17 +163,19 @@ def get_color_from_session(intent, session):
     elif session.get('attributes', {}):
         topics = session['attributes']
         speech_output = "I will quiz you on  "
+        session_attributes = session.get('attributes', {})
 
         for key, value in topics.items()[:-1]:
-            if key != 'answer':
+            if key != 'answer' and key != 'secondTest':
                 speech_output += key + ", "
 
         speech_output += " and "+ topics.items()[-1][0] if topics.items()[-1][0] != 'answer' else ''
-        speech_output += ". Aside from those, feel free to keep using BrainCo."
+        speech_output += ". Aside from those, feel free to keep using Mindful."
         session_attributes = session.get('attributes', {})
         should_end_session = False
     else:
-        speech_output = "I'm not sure if you want to use BrainCo. " \
+        session_attributes = session.get('attributes', {})
+        speech_output = "I'm not sure if you want to use Mindful. " \
                         "You should try to make me quiz you."
         should_end_session = False
 
